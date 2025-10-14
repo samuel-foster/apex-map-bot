@@ -39,9 +39,50 @@ const getMapRotation = async () => {
     }
 };
 
+const getNextMaps = async () => {
+    try {
+        const { data } = await axios.get(url);
+        const $ = cheerio.load(data);
+        
+        // Find "Next map is" text and extract the map names
+        const nextMaps = {
+            battleRoyale: '',
+            ranked: '',
+            mixtape: ''
+        };
+        
+        // Look for next map information in h5 elements
+        $('h5').each((i, elem) => {
+            const text = $(elem).text();
+            if (text.includes('Next map is')) {
+                const mapName = $(elem).find('span[style*="font-weight: bold"]').text();
+                const parentContainer = $(elem).closest('.container, .row, .col-md-4');
+                
+                // Determine which mode this belongs to by looking at siblings
+                const modeHeader = parentContainer.find('h2').first().text();
+                const prevH2 = $(elem).prevAll('h2').first().text();
+                
+                // Check previous h2 elements to determine the mode
+                if (prevH2 === 'BR Pubs' || modeHeader.includes('BR Pubs')) {
+                    nextMaps.battleRoyale = mapName;
+                } else if (prevH2 === 'BR Ranked' || modeHeader.includes('BR Ranked')) {
+                    nextMaps.ranked = mapName;
+                } else if (prevH2 === 'Mixtape' || modeHeader.includes('Mixtape')) {
+                    nextMaps.mixtape = mapName;
+                }
+            }
+        });
+        
+        return nextMaps;
+    } catch (error) {
+        console.error('Error fetching next maps:', error);
+        return null;
+    }
+};
+
 client.on('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    console.log('🎮 Apex Map Bot v2.0 - Auto-deploy test!');
+    console.log('🎮 Apex Map Bot v3.0 - Next map feature added!');
 });
 
 client.on('messageCreate', async message => {
@@ -61,16 +102,62 @@ client.on('messageCreate', async message => {
         }
     }
     
-    // NEW: Test command to verify auto-deployment
-    if (message.content === '!ping') {
-        message.channel.send('🏓 Pong! Auto-deploy is working! v2.0');
+    // NEW: Next map command
+    if (message.content === '!next') {
+        const nextMaps = await getNextMaps();
+        if (nextMaps && (nextMaps.battleRoyale || nextMaps.ranked || nextMaps.mixtape)) {
+            message.channel.send(`**Next Apex Legends Map Rotation:**
+
+**Battle Royale:** ${nextMaps.battleRoyale || 'Not available'}
+**Ranked:** ${nextMaps.ranked || 'Not available'}
+**Mixtape:** ${nextMaps.mixtape || 'Not available'}`);
+        } else {
+            message.channel.send('Could not retrieve next map rotation data.');
+        }
     }
     
-    // NEW: Help command
+    // ENHANCED: Combined current + next maps
+    if (message.content === '!maps') {
+        const [currentMaps, nextMaps] = await Promise.all([
+            getMapRotation(),
+            getNextMaps()
+        ]);
+        
+        if (currentMaps || nextMaps) {
+            let response = '**🗺️ Apex Legends Map Rotation 🗺️**\n\n';
+            
+            if (currentMaps) {
+                response += '**📍 CURRENT MAPS:**\n';
+                response += `**Battle Royale:** ${currentMaps.battleRoyale || 'Not available'}\n`;
+                response += `**Ranked:** ${currentMaps.ranked || 'Not available'}\n`;
+                response += `**Mixtape:** ${currentMaps.mixtape || 'Not available'}\n\n`;
+            }
+            
+            if (nextMaps) {
+                response += '**⏭️ NEXT MAPS:**\n';
+                response += `**Battle Royale:** ${nextMaps.battleRoyale || 'Not available'}\n`;
+                response += `**Ranked:** ${nextMaps.ranked || 'Not available'}\n`;
+                response += `**Mixtape:** ${nextMaps.mixtape || 'Not available'}`;
+            }
+            
+            message.channel.send(response);
+        } else {
+            message.channel.send('Could not retrieve map rotation data.');
+        }
+    }
+    
+    // Test command to verify auto-deployment
+    if (message.content === '!ping') {
+        message.channel.send('🏓 Pong! Auto-deploy is working! v3.0 - Next maps feature!');
+    }
+    
+    // Help command
     if (message.content === '!help') {
-        message.channel.send(`**Apex Map Bot Commands:**
+        message.channel.send(`**🎮 Apex Map Bot Commands:**
         
 🗺️ \`!map\` - Get current map rotation
+⏭️ \`!next\` - Get next map rotation
+📋 \`!maps\` - Get current AND next maps
 🏓 \`!ping\` - Test bot response
 ❓ \`!help\` - Show this help message`);
     }
