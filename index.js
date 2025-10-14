@@ -41,9 +41,13 @@ const getMapRotation = async () => {
 
 client.on('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
+    console.log('🎮 Apex Map Bot v2.0 - Auto-deploy test!');
 });
 
 client.on('messageCreate', async message => {
+    // Ignore bot messages
+    if (message.author.bot) return;
+    
     if (message.content === '!map') {
         const mapRotation = await getMapRotation();
         if (mapRotation && (mapRotation.battleRoyale || mapRotation.ranked || mapRotation.mixtape)) {
@@ -55,6 +59,20 @@ client.on('messageCreate', async message => {
         } else {
             message.channel.send('Could not retrieve map rotation data. The website might be down or has changed structure.');
         }
+    }
+    
+    // NEW: Test command to verify auto-deployment
+    if (message.content === '!ping') {
+        message.channel.send('🏓 Pong! Auto-deploy is working! v2.0');
+    }
+    
+    // NEW: Help command
+    if (message.content === '!help') {
+        message.channel.send(`**Apex Map Bot Commands:**
+        
+🗺️ \`!map\` - Get current map rotation
+🏓 \`!ping\` - Test bot response
+❓ \`!help\` - Show this help message`);
     }
 });
 
