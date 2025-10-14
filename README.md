@@ -1,6 +1,6 @@
 # Apex Map Bot
 
-A Discord bot that shows the current Apex Legends map rotation with live updates.
+A Discord bot that shows the current Apex Legends map rotation with live updates and patch notes.
 
 ## 🤖 Invite the Bot
 
@@ -18,6 +18,7 @@ The bot needs these permissions:
 - `!map` - Shows the current map rotation (BR Pubs, BR Ranked, Mixtape)
 - `!next` - Shows the next map rotation
 - `!maps` - Shows both current and next map rotations
+- `!patch` - Get a summary of the latest patch notes
 - `!ping` - Check if the bot is responsive
 - `!help` - Display all available commands
 
@@ -83,12 +84,14 @@ crontab -e
 # Add: */30 * * * * /home/sam/apex-map-bot/update-bot.sh
 ```
 
-## 📊 Data Source
+## 📊 Data Sources
 
-Map rotation data is scraped from [Apex Legends Status](https://apexlegendsstatus.com/current-map).
+- Map rotation data: [Apex Legends Status](https://apexlegendsstatus.com/current-map)
+- Patch notes: [EA Apex Legends News](https://www.ea.com/games/apex-legends/apex-legends/news)
 
 ## 📝 Version History
 
+- **v3.2** - Added !patch command for latest patch notes summary
 - **v3.1** - Fixed next map parsing with improved CSS selectors
 - **v3.0** - Added !next and !maps commands for next map rotation
 - **v2.0** - Improved web scraping reliability
