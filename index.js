@@ -44,34 +44,30 @@ const getNextMaps = async () => {
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
         
-        // Find "Next map is" text and extract the map names
+        // Use the CSS classes to identify each game mode section
         const nextMaps = {
             battleRoyale: '',
             ranked: '',
             mixtape: ''
         };
         
-        // Look for next map information in h5 elements
-        $('h5').each((i, elem) => {
-            const text = $(elem).text();
-            if (text.includes('Next map is')) {
-                const mapName = $(elem).find('span[style*="font-weight: bold"]').text();
-                const parentContainer = $(elem).closest('.container, .row, .col-md-4');
-                
-                // Determine which mode this belongs to by looking at siblings
-                const modeHeader = parentContainer.find('h2').first().text();
-                const prevH2 = $(elem).prevAll('h2').first().text();
-                
-                // Check previous h2 elements to determine the mode
-                if (prevH2 === 'BR Pubs' || modeHeader.includes('BR Pubs')) {
-                    nextMaps.battleRoyale = mapName;
-                } else if (prevH2 === 'BR Ranked' || modeHeader.includes('BR Ranked')) {
-                    nextMaps.ranked = mapName;
-                } else if (prevH2 === 'Mixtape' || modeHeader.includes('Mixtape')) {
-                    nextMaps.mixtape = mapName;
-                }
-            }
-        });
+        // BR Pubs (sdcat container)
+        const brPubsNext = $('.sdcat').find('h5:contains("Next map is")').find('span[style*="font-weight: bold"]').text().trim();
+        if (brPubsNext) {
+            nextMaps.battleRoyale = brPubsNext;
+        }
+        
+        // BR Ranked (brranked container)  
+        const brRankedNext = $('.brranked').find('h5:contains("Next map is")').find('span[style*="font-weight: bold"]').text().trim();
+        if (brRankedNext) {
+            nextMaps.ranked = brRankedNext;
+        }
+        
+        // Mixtape (mixtape container)
+        const mixtapeNext = $('.mixtape').find('h5:contains("Next map is")').find('span[style*="font-weight: bold"]').text().trim();
+        if (mixtapeNext) {
+            nextMaps.mixtape = mixtapeNext;
+        }
         
         return nextMaps;
     } catch (error) {
@@ -82,7 +78,7 @@ const getNextMaps = async () => {
 
 client.on('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    console.log('🎮 Apex Map Bot v3.0 - Next map feature added!');
+    console.log('🎮 Apex Map Bot v3.1 - Fixed next map parsing!');
 });
 
 client.on('messageCreate', async message => {
@@ -102,7 +98,7 @@ client.on('messageCreate', async message => {
         }
     }
     
-    // NEW: Next map command
+    // Next map command
     if (message.content === '!next') {
         const nextMaps = await getNextMaps();
         if (nextMaps && (nextMaps.battleRoyale || nextMaps.ranked || nextMaps.mixtape)) {
@@ -116,7 +112,7 @@ client.on('messageCreate', async message => {
         }
     }
     
-    // ENHANCED: Combined current + next maps
+    // Combined current + next maps
     if (message.content === '!maps') {
         const [currentMaps, nextMaps] = await Promise.all([
             getMapRotation(),
@@ -148,7 +144,7 @@ client.on('messageCreate', async message => {
     
     // Test command to verify auto-deployment
     if (message.content === '!ping') {
-        message.channel.send('🏓 Pong! Auto-deploy is working! v3.0 - Next maps feature!');
+        message.channel.send('🏓 Pong! Auto-deploy is working! v3.1 - Next maps fixed!');
     }
     
     // Help command
