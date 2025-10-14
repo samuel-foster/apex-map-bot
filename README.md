@@ -30,3 +30,4 @@ A Discord bot that shows the current Apex Legends map rotation.
 ## Usage
 
 *   `!map` - Shows the current map rotation.
+# Auto-deploy test
