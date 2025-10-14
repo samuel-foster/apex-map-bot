@@ -21,3 +21,15 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# Logs directory
+logs/
+
+# Environment files for production
+.env.production
+.env.local

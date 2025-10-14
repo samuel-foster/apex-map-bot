@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  apex-map-bot:
+    build: .
+    container_name: apex-map-bot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - NODE_ENV=production
+    volumes:
+      # Optional: Mount logs directory for easier debugging
+      - ./logs:/app/logs:rw
+    networks:
+      - bot-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.docker.compose.project=apex-map-bot"
+      - "description=Apex Legends Map Rotation Discord Bot"
+
+networks:
+  bot-network:
+    driver: bridge
+
+# Optional: Add logging configuration
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
