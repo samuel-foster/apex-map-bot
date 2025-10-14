@@ -9,7 +9,6 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
       - NODE_ENV=production
     volumes:
-      # Optional: Mount logs directory for easier debugging
       - ./logs:/app/logs:rw
     networks:
       - bot-network
@@ -22,14 +21,20 @@ services:
     labels:
       - "com.docker.compose.project=apex-map-bot"
       - "description=Apex Legends Map Rotation Discord Bot"
+      
+  # Auto-updater that checks for changes every 5 minutes
+  watchtower:
+    image: containrrr/watchtower
+    container_name: apex-bot-updater
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=300  # Check every 5 minutes
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_STOPPED=true
+    command: apex-map-bot
 
 networks:
   bot-network:
     driver: bridge
-
-# Optional: Add logging configuration
-x-logging: &default-logging
-  driver: "json-file"
-  options:
-    max-size: "10m"
-    max-file: "3"
