@@ -1,5 +1,5 @@
-# Use official Node.js runtime as base image
-FROM node:18-alpine
+# Use Node.js 20 LTS instead of 18 to fix undici compatibility
+FROM node:20-alpine
 
 # Set working directory in container
 WORKDIR /app
