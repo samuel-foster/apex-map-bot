@@ -21,8 +21,6 @@ The bot needs these permissions:
 - `!maps` - Shows both current and next map rotations
 
 ### 🏆 Ranked Commands
-- `!ranked` - Current ranked split info, entry costs, and tips
-- `!split` - Ranked split schedule and days remaining
 - `!meta` - Top legend picks from top 100 Predators with team comp suggestions
 
 ### 📰 Info Commands

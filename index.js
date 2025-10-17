@@ -240,29 +240,7 @@ const getMeta = async () => {
     }
 };
 
-const getCurrentSplit = () => {
-    const now = new Date();
-    const split1End = new Date('2025-11-19');
-    
-    if (now < split1End) {
-        return 1;
-    }
-    return 2;
-};
-
-const getDaysRemaining = () => {
-    const now = new Date();
-    const split1End = new Date('2025-11-19');
-    const split2End = new Date('2026-01-07');
-    
-    const currentSplit = getCurrentSplit();
-    const endDate = currentSplit === 1 ? split1End : split2End;
-    
-    const diffTime = endDate - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays;
-};
+// Ranked split helpers removed — !ranked and !split commands disabled temporarily
 
 client.on('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -371,49 +349,7 @@ client.on('messageCreate', async message => {
         }
     }
     
-    // Ranked info command
-    if (message.content === '!ranked') {
-        const currentSplit = getCurrentSplit();
-        const splitData = RANKED_DATA.splitInfo[currentSplit];
-        const daysLeft = getDaysRemaining();
-        
-        let response = `**🏆 SEASON ${RANKED_DATA.season} RANKED INFO**\n\n`;
-        response += `**Current Split:** ${currentSplit}/2\n`;
-        response += `**Map:** ${splitData.map}\n`;
-        response += `**Split Ends:** ${splitData.endDate} (${daysLeft} days left)\n\n`;
-        response += `**⚔️ ENTRY COSTS:**\n`;
-        response += `• Rookie/Bronze: 0 RP\n`;
-        response += `• Silver: 20 RP\n`;
-        response += `• Gold: 35 RP\n`;
-        response += `• Platinum: 45 RP\n`;
-        response += `• Diamond: 65 RP\n`;
-        response += `• Master/Pred: 90 RP\n\n`;
-        response += `**💡 TIP:** Placement matters! Top 10 is crucial for RP gains.\n`;
-        response += `Kill/Assist value increases with better placement.`;
-        
-        message.channel.send(response);
-    }
-    
-    // Split info command
-    if (message.content === '!split') {
-        const currentSplit = getCurrentSplit();
-        const split1 = RANKED_DATA.splitInfo[1];
-        const split2 = RANKED_DATA.splitInfo[2];
-        const daysLeft = getDaysRemaining();
-        
-        let response = `**📅 SEASON ${RANKED_DATA.season} RANKED SPLITS**\n\n`;
-        response += `**Current Split:** ${currentSplit}/2 ⭐\n`;
-        response += `**Days Remaining:** ${daysLeft} days\n\n`;
-        response += `**SPLIT 1:**\n`;
-        response += `• Map: ${split1.map}\n`;
-        response += `• Duration: ${split1.startDate} - ${split1.endDate}\n\n`;
-        response += `**SPLIT 2:**\n`;
-        response += `• Map: ${split2.map}\n`;
-        response += `• Duration: ${split2.startDate} - ${split2.endDate}\n\n`;
-        response += `**Note:** Your final rank badge is based on the highest rank achieved in EITHER split!`;
-        
-        message.channel.send(response);
-    }
+    // Note: !ranked and !split commands have been temporarily disabled while we refine data accuracy.
     
     // Meta command
     if (message.content === '!meta') {
@@ -449,7 +385,7 @@ client.on('messageCreate', async message => {
     
     // Help command
     if (message.content === '!help') {
-        message.channel.send(`**🎮 Apex Bot Commands:**
+    message.channel.send(`**🎮 Apex Bot Commands:**
 
 **📍 MAP COMMANDS:**
 • \`!map\` - Get current map rotation
@@ -457,8 +393,6 @@ client.on('messageCreate', async message => {
 • \`!maps\` - Get current AND next maps
 
 **🏆 RANKED COMMANDS:**
-• \`!ranked\` - Ranked info, entry costs, current split
-• \`!split\` - Split schedule and days remaining
 • \`!meta\` - Top legends in ranked (from top Preds)
 
 **📰 INFO COMMANDS:**
