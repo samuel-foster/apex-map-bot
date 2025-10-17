@@ -1,10 +1,10 @@
-# Apex Map Bot
+# Apex Bot
 
-A Discord bot that shows the current Apex Legends map rotation with live updates and patch notes.
+A Discord bot for Apex Legends with map rotations, patch notes, and ranked information.
 
 ## 🤖 Invite the Bot
 
-**Click here to add Apex Map Bot to your Discord server:**
+**Click here to add Apex Bot to your Discord server:**
 
 👉 **[Invite Bot to Server](https://discord.com/api/oauth2/authorize?client_id=1427677817935630486&permissions=412317904960&scope=bot)** 👈
 
@@ -15,9 +15,17 @@ The bot needs these permissions:
 
 ## 📋 Commands
 
+### 📍 Map Commands
 - `!map` - Shows the current map rotation (BR Pubs, BR Ranked, Mixtape)
 - `!next` - Shows the next map rotation
 - `!maps` - Shows both current and next map rotations
+
+### 🏆 Ranked Commands
+- `!ranked` - Current ranked split info, entry costs, and tips
+- `!split` - Ranked split schedule and days remaining
+- `!meta` - Top legend picks from top 100 Predators with team comp suggestions
+
+### 📰 Info Commands
 - `!patch` - Get a summary of the latest patch notes
 - `!ping` - Check if the bot is responsive
 - `!help` - Display all available commands
@@ -87,10 +95,12 @@ crontab -e
 ## 📊 Data Sources
 
 - Map rotation data: [Apex Legends Status](https://apexlegendsstatus.com/current-map)
+- Meta data: [Apex Legends Status Meta](https://apexlegendsstatus.com/meta)
 - Patch notes: [EA Apex Legends News](https://www.ea.com/games/apex-legends/apex-legends/news)
 
 ## 📝 Version History
 
+- **v4.0** - Added ranked commands (!ranked, !split, !meta)
 - **v3.2** - Added !patch command for latest patch notes summary
 - **v3.1** - Fixed next map parsing with improved CSS selectors
 - **v3.0** - Added !next and !maps commands for next map rotation
