@@ -6,6 +6,26 @@ const cheerio = require('cheerio');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 const url = 'https://apexlegendsstatus.com/current-map';
 const patchNotesUrl = 'https://www.ea.com/games/apex-legends/apex-legends/news';
+const metaUrl = 'https://apexlegendsstatus.com/meta';
+
+// Ranked data constants
+const RANKED_DATA = {
+    season: 26,
+    splitInfo: {
+        1: { map: 'Broken Moon', startDate: 'Oct 1, 2025', endDate: 'Nov 19, 2025' },
+        2: { map: 'Storm Point', startDate: 'Nov 19, 2025', endDate: 'Jan 7, 2026' }
+    },
+    entryCosts: {
+        'Rookie': 0,
+        'Bronze': 0,
+        'Silver': 20,
+        'Gold': 35,
+        'Platinum': 45,
+        'Diamond': 65,
+        'Master': 90,
+        'Apex Predator': 90
+    }
+};
 
 const getMapRotation = async () => {
     try {
@@ -99,7 +119,6 @@ const getPatchNotes = async () => {
         let inGameSection = false;
         let inLegendSection = false;
         let currentLegend = '';
-        let foundAnySection = false;
         
         $patch('h2, h3, h4, h5, h6, p, li').each((i, elem) => {
             const tagName = elem.name;
@@ -124,7 +143,6 @@ const getPatchNotes = async () => {
             if (text.toUpperCase() === 'GAME' || text.toUpperCase() === 'PREVIOUS UPDATES & FIXES') {
                 inGameSection = true;
                 inLegendSection = false;
-                foundAnySection = true;
                 return;
             }
             
@@ -132,7 +150,6 @@ const getPatchNotes = async () => {
             if (text.toUpperCase() === 'LEGENDS') {
                 inLegendSection = true;
                 inGameSection = false;
-                foundAnySection = true;
                 return;
             }
             
@@ -183,9 +200,73 @@ const getPatchNotes = async () => {
     }
 };
 
+const getMeta = async () => {
+    try {
+        const { data } = await axios.get(metaUrl);
+        const $ = cheerio.load(data);
+        
+        const legends = [];
+        
+        // Find legend data in the table/list
+        // The page shows legends with rank, name, win rate, pick rate
+        $('img[alt]').each((i, elem) => {
+            if (i >= 10) return false; // Only get top 10
+            
+            const name = $(elem).attr('alt');
+            if (!name || name.length < 2) return;
+            
+            // Try to find the associated stats
+            const container = $(elem).closest('div').parent();
+            const text = container.text();
+            
+            // Extract win rate and pick rate using regex
+            const winRateMatch = text.match(/(\d+\.?\d*)%/);
+            const pickRateMatch = text.match(/(\d+\.?\d*)%.*?(\d+\.?\d*)%/);
+            
+            if (name && winRateMatch) {
+                legends.push({
+                    name: name,
+                    rank: i + 1,
+                    winRate: winRateMatch[1],
+                    pickRate: pickRateMatch ? pickRateMatch[2] : 'N/A'
+                });
+            }
+        });
+        
+        return legends;
+    } catch (error) {
+        console.error('Error fetching meta:', error);
+        return null;
+    }
+};
+
+const getCurrentSplit = () => {
+    const now = new Date();
+    const split1End = new Date('2025-11-19');
+    
+    if (now < split1End) {
+        return 1;
+    }
+    return 2;
+};
+
+const getDaysRemaining = () => {
+    const now = new Date();
+    const split1End = new Date('2025-11-19');
+    const split2End = new Date('2026-01-07');
+    
+    const currentSplit = getCurrentSplit();
+    const endDate = currentSplit === 1 ? split1End : split2End;
+    
+    const diffTime = endDate - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+};
+
 client.on('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    console.log('🎮 Apex Map Bot v3.2 - Added patch notes command!');
+    console.log('🎮 Apex Bot v4.0 - Added ranked commands!');
 });
 
 client.on('messageCreate', async message => {
@@ -290,21 +371,100 @@ client.on('messageCreate', async message => {
         }
     }
     
+    // Ranked info command
+    if (message.content === '!ranked') {
+        const currentSplit = getCurrentSplit();
+        const splitData = RANKED_DATA.splitInfo[currentSplit];
+        const daysLeft = getDaysRemaining();
+        
+        let response = `**🏆 SEASON ${RANKED_DATA.season} RANKED INFO**\n\n`;
+        response += `**Current Split:** ${currentSplit}/2\n`;
+        response += `**Map:** ${splitData.map}\n`;
+        response += `**Split Ends:** ${splitData.endDate} (${daysLeft} days left)\n\n`;
+        response += `**⚔️ ENTRY COSTS:**\n`;
+        response += `• Rookie/Bronze: 0 RP\n`;
+        response += `• Silver: 20 RP\n`;
+        response += `• Gold: 35 RP\n`;
+        response += `• Platinum: 45 RP\n`;
+        response += `• Diamond: 65 RP\n`;
+        response += `• Master/Pred: 90 RP\n\n`;
+        response += `**💡 TIP:** Placement matters! Top 10 is crucial for RP gains.\n`;
+        response += `Kill/Assist value increases with better placement.`;
+        
+        message.channel.send(response);
+    }
+    
+    // Split info command
+    if (message.content === '!split') {
+        const currentSplit = getCurrentSplit();
+        const split1 = RANKED_DATA.splitInfo[1];
+        const split2 = RANKED_DATA.splitInfo[2];
+        const daysLeft = getDaysRemaining();
+        
+        let response = `**📅 SEASON ${RANKED_DATA.season} RANKED SPLITS**\n\n`;
+        response += `**Current Split:** ${currentSplit}/2 ⭐\n`;
+        response += `**Days Remaining:** ${daysLeft} days\n\n`;
+        response += `**SPLIT 1:**\n`;
+        response += `• Map: ${split1.map}\n`;
+        response += `• Duration: ${split1.startDate} - ${split1.endDate}\n\n`;
+        response += `**SPLIT 2:**\n`;
+        response += `• Map: ${split2.map}\n`;
+        response += `• Duration: ${split2.startDate} - ${split2.endDate}\n\n`;
+        response += `**Note:** Your final rank badge is based on the highest rank achieved in EITHER split!`;
+        
+        message.channel.send(response);
+    }
+    
+    // Meta command
+    if (message.content === '!meta') {
+        message.channel.send('📊 Fetching current ranked meta from top 100 Predators...');
+        
+        const meta = await getMeta();
+        
+        if (meta && meta.length > 0) {
+            let response = `**🎯 CURRENT RANKED META** (Top 100 Preds)\n\n`;
+            response += `**TOP 5 LEGENDS:**\n`;
+            
+            meta.slice(0, 5).forEach((legend, i) => {
+                const emoji = i === 0 ? '👑' : i === 1 ? '🥈' : i === 2 ? '🥉' : '▫️';
+                response += `${emoji} **${legend.name}** - ${legend.winRate}% WR, ${legend.pickRate}% PR\n`;
+            });
+            
+            response += `\n**TEAM COMP SUGGESTIONS:**\n`;
+            response += `• IGL: ${meta[0]?.name || 'Revenant'} / ${meta[1]?.name || 'Ash'}\n`;
+            response += `• Fragger: ${meta[2]?.name || 'Alter'} / ${meta[3]?.name || 'Bangalore'}\n`;
+            response += `• Support: ${meta[4]?.name || 'Loba'} / Lifeline\n\n`;
+            response += `📈 Data from apexlegendsstatus.com/meta`;
+            
+            message.channel.send(response);
+        } else {
+            message.channel.send('Could not retrieve meta data. Try again later or check: https://apexlegendsstatus.com/meta');
+        }
+    }
+    
     // Test command to verify auto-deployment
     if (message.content === '!ping') {
-        message.channel.send('🏓 Pong! Bot is running! v3.2');
+        message.channel.send('🏓 Pong! Bot is running! v4.0');
     }
     
     // Help command
     if (message.content === '!help') {
-        message.channel.send(`**🎮 Apex Map Bot Commands:**
-        
-🗺️ \`!map\` - Get current map rotation
-⏭️ \`!next\` - Get next map rotation
-📋 \`!maps\` - Get current AND next maps
-📰 \`!patch\` - Get latest patch notes summary
-🏓 \`!ping\` - Test bot response
-❓ \`!help\` - Show this help message`);
+        message.channel.send(`**🎮 Apex Bot Commands:**
+
+**📍 MAP COMMANDS:**
+• \`!map\` - Get current map rotation
+• \`!next\` - Get next map rotation
+• \`!maps\` - Get current AND next maps
+
+**🏆 RANKED COMMANDS:**
+• \`!ranked\` - Ranked info, entry costs, current split
+• \`!split\` - Split schedule and days remaining
+• \`!meta\` - Top legends in ranked (from top Preds)
+
+**📰 INFO COMMANDS:**
+• \`!patch\` - Get latest patch notes summary
+• \`!ping\` - Test bot response
+• \`!help\` - Show this help message`);
     }
 });
 
